@@ -8,10 +8,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import { useAuth } from '../context/AuthContext';
 import { navigateTo } from '../config/routes';
 import { palette } from '../theme/theme';
+import HeuristicLogo from '../components/common/HeuristicLogo';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -56,20 +56,21 @@ export default function LoginPage() {
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Box
+          <Box sx={{ display: 'inline-flex', mb: 2 }}>
+            <HeuristicLogo size={72} variant="dark" />
+          </Box>
+          <Typography
             sx={{
-              width: 52,
-              height: 52,
-              borderRadius: '14px',
-              backgroundColor: palette.primary,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 2,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: palette.textMuted,
+              mb: 1,
             }}
           >
-            <ShieldOutlinedIcon sx={{ color: '#fff', fontSize: 28 }} />
-          </Box>
+            Heuristic Labs
+          </Typography>
           <Typography variant="h5" sx={{ mb: 0.5 }}>Compliance Monitoring</Typography>
           <Typography variant="body2">Sign in to access the safety console</Typography>
         </Box>

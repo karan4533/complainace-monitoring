@@ -23,7 +23,7 @@ export function severityFromConfidence(confidence) {
 }
 
 export const SEVERITY_COLORS = {
-  low: { bg: '#F5EDE4', color: '#6B5344' },
+  low: { bg: '#F5EDE4', color: '#6E5234' },
   medium: { bg: '#FFF8E1', color: '#E65100' },
   high: { bg: '#FEEAEA', color: '#C62828' },
   critical: { bg: '#FFCDD2', color: '#B71C1C' },

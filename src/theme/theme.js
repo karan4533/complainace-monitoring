@@ -1,14 +1,14 @@
 import { createTheme } from '@mui/material/styles';
 
 export const palette = {
-  sidebar: '#3D2E1F',
+  sidebar: '#50381F',
   sidebarHover: 'rgba(255, 255, 255, 0.08)',
   sidebarActive: 'rgba(255, 255, 255, 0.14)',
   background: '#FAF7F2',
   surface: '#FFFFFF',
-  primary: '#4A3728',
-  primaryDark: '#3D2E1F',
-  primaryLight: '#6B5344',
+  primary: '#50381F',
+  primaryDark: '#3F2C18',
+  primaryLight: '#6E5234',
   textPrimary: '#2D2419',
   textSecondary: '#8B7355',
   textMuted: '#A89888',
@@ -21,7 +21,7 @@ export const palette = {
   error: '#C62828',
   errorBg: '#FEEAEA',
   tagBg: '#F5EDE4',
-  tagText: '#6B5344',
+  tagText: '#6E5234',
 };
 
 const theme = createTheme({

@@ -17,11 +17,11 @@ import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../context/AuthContext';
 import { navigateTo } from '../../config/routes';
 import { palette } from '../../theme/theme';
+import HeuristicLogo from '../common/HeuristicLogo';
 
 const DRAWER_WIDTH = 260;
 
@@ -57,22 +57,15 @@ function SidebarContent({ activePage, onClose }) {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#fff' }}>
       <Box sx={{ px: 2.5, pt: 3, pb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: '10px',
-              backgroundColor: 'rgba(255,255,255,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <ShieldOutlinedIcon sx={{ fontSize: 20, color: '#fff' }} />
+          <HeuristicLogo size={40} variant="light" />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+              Compliance
+            </Typography>
+            <Typography sx={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.04em' }}>
+              Heuristic Labs
+            </Typography>
           </Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '1.125rem', letterSpacing: '-0.01em' }}>
-            Compliance
-          </Typography>
         </Box>
         <Box
           sx={{

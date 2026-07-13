@@ -2,8 +2,8 @@ import React from 'react';
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import StatusBadge from '../common/StatusBadge';
+import HeuristicLogo from '../common/HeuristicLogo';
 import { palette } from '../../theme/theme';
 import { DRAWER_WIDTH } from './Sidebar';
 
@@ -31,17 +31,17 @@ export default function TopHeader({ pipelineLive, onMenuClick, showMenuButton })
           sx={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 0.75,
-            px: 1.5,
-            py: 0.6,
+            gap: 1,
+            px: 1.25,
+            py: 0.5,
             borderRadius: '20px',
             border: `1px solid ${palette.border}`,
             backgroundColor: palette.surface,
           }}
         >
-          <ShieldOutlinedIcon sx={{ fontSize: 16, color: palette.primary }} />
+          <HeuristicLogo size={22} variant="dark" />
           <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: palette.textPrimary }}>
-            Safety Console
+            Heuristic Labs
           </Typography>
         </Box>
 
