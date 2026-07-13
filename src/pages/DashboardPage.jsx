@@ -1,40 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  AppBar,
-  Box,
-  Button,
-  CircularProgress,
-  CssBaseline,
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Toolbar,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AddBoxIcon from '@mui/icons-material/AddBox';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import SettingsIcon from '@mui/icons-material/Settings';
+import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
+import AppLayout from '../components/layout/AppLayout';
+import PageHeader from '../components/common/PageHeader';
+import StatusBadge from '../components/common/StatusBadge';
+import CameraTile from '../components/live/CameraTile';
 import {
   getPipelineStatus,
   getStreamConfig,
   startPipeline,
   stopPipeline,
 } from '../services/pipelineService';
+import { fetchCameras } from '../services/cameraService';
+import { useViolations } from '../hooks/useViolations';
 import { API_BASE } from '../config/api';
+import { palette } from '../theme/theme';
 
-const drawerWidth = 110;
+function resolveCameraStreamUrl(camera, baseStreamUrl) {
+  if (camera.stream_url) return camera.stream_url;
+  if (camera.streamUrl) return camera.streamUrl;
+  if (baseStreamUrl && camera.stream_src) {
+    const playerBase = baseStreamUrl.split('?')[0];
+    return `${playerBase}?src=${camera.stream_src}`;
+  }
+  return baseStreamUrl;
+}
 
 export default function DashboardPage() {
+  const [cameras, setCameras] = useState([]);
   const [streamUrl, setStreamUrl] = useState(null);
   const [pipelineStarted, setPipelineStarted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pipelineStatus, setPipelineStatus] = useState('');
+  const [camerasLoading, setCamerasLoading] = useState(true);
   const pollRef = useRef(null);
+  const { violations } = useViolations({ enabled: true });
+
+  const activeCameraIds = new Set(
+    violations.filter((v) => !v.acknowledged).map((v) => v.cameraId)
+  );
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchCameras();
+        setCameras(data);
+      } catch {
+        setCameras([]);
+      } finally {
+        setCamerasLoading(false);
+      }
+    })();
+  }, []);
 
   const waitForPipelineReady = () => {
     let attempts = 0;
@@ -66,11 +84,7 @@ export default function DashboardPage() {
     poll();
   };
 
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearTimeout(pollRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current); }, []);
 
   const handleStartStream = async () => {
     try {
@@ -101,104 +115,98 @@ export default function DashboardPage() {
     }
   };
 
-  const handleNavigation = (text) => {
-    if (text === 'Reports') window.open('/#/reports', '_blank');
-  };
+  const pipelineLive = !!(pipelineStarted && streamUrl);
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f4f6f8' }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#ffffff', color: '#000000' }}
-      >
-        <Toolbar sx={{ minHeight: '64px !important' }}>
-          <PlayCircleFilledIcon sx={{ color: '#3f51b5', fontSize: 34, mr: 2 }} />
-          <Typography variant="h6" sx={{ fontWeight: 600, flexGrow: 1 }}>
-            Video Intelligence Platform
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Drawer variant="permanent" sx={{ width: drawerWidth, '& .MuiDrawer-paper': { width: drawerWidth, mt: '64px' } }}>
-        <List sx={{ pt: 2 }}>
-          <ListItemButton sx={{ flexDirection: 'column', py: 2, mx: 1, borderRadius: 2, backgroundColor: '#e8eaf6' }}>
-            <ListItemIcon sx={{ color: '#3f51b5' }}>
-              <DashboardIcon />
-            </ListItemIcon>
-            <ListItemText primary="Dashboard" primaryTypographyProps={{ fontSize: '0.75rem', fontWeight: 600 }} />
-          </ListItemButton>
-          {[
-            { text: 'Add Stream', icon: <AddBoxIcon /> },
-            { text: 'Reports', icon: <AssessmentIcon /> },
-            { text: 'Settings', icon: <SettingsIcon /> },
-          ].map((item) => (
-            <ListItemButton key={item.text} onClick={() => handleNavigation(item.text)} sx={{ flexDirection: 'column', py: 2, mx: 1 }}>
-              <ListItemIcon sx={{ color: '#757575' }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: '0.75rem' }} />
-            </ListItemButton>
-          ))}
-        </List>
-      </Drawer>
-
-      <Box component="main" sx={{ flexGrow: 1, p: 4, mt: 8 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b' }}>
-            Live Monitoring Dashboard
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+    <AppLayout activePage="dashboard" pipelineLive={pipelineLive}>
+      <PageHeader
+        title="Live Monitoring Dashboard"
+        subtitle="Multiple camera live feeds · tiles turn red on active violation"
+        action={
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
             <Button
               variant="contained"
               onClick={handleStartStream}
               disabled={loading || (pipelineStarted && !!streamUrl)}
-              sx={{ textTransform: 'none', borderRadius: 2, px: 3, py: 1.2, fontWeight: 600, boxShadow: 'none' }}
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <PlayCircleFilledIcon />}
+              sx={{ height: 42, px: 2.5 }}
             >
               {loading ? 'Starting...' : 'Start Stream'}
             </Button>
             {pipelineStarted && (
               <Button
                 variant="outlined"
-                color="error"
                 onClick={handleStopStream}
-                sx={{ textTransform: 'none', borderRadius: 2, px: 3, py: 1.2, fontWeight: 600 }}
+                startIcon={<StopCircleOutlinedIcon />}
+                sx={{
+                  height: 42,
+                  px: 2.5,
+                  color: palette.error,
+                  borderColor: palette.errorBg,
+                  backgroundColor: palette.errorBg,
+                  '&:hover': { borderColor: palette.error, backgroundColor: '#FDDEDE' },
+                }}
               >
                 Stop Stream
               </Button>
             )}
           </Box>
+        }
+      />
+
+      {pipelineStatus && (
+        <Box sx={{ mb: 2.5 }}>
+          <StatusBadge
+            label={pipelineStatus}
+            variant={pipelineLive ? 'success' : pipelineStarted ? 'warning' : 'neutral'}
+          />
         </Box>
+      )}
 
-        {pipelineStatus && <Typography sx={{ mb: 2, color: '#475569', fontWeight: 500 }}>{pipelineStatus}</Typography>}
-
-        <Paper
-          elevation={5}
+      {camerasLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      ) : cameras.length === 0 ? (
+        <Box
           sx={{
-            width: '100%',
-            maxWidth: 1100,
-            aspectRatio: '16/9',
-            borderRadius: 4,
-            overflow: 'hidden',
-            backgroundColor: '#000',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            textAlign: 'center',
+            py: 8,
+            px: 3,
+            borderRadius: '12px',
+            border: `1px dashed ${palette.border}`,
+            backgroundColor: palette.surface,
           }}
         >
-          {streamUrl ? (
-            <iframe
-              src={streamUrl}
-              title="Live Stream"
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              allowFullScreen
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+            No cameras connected yet
+          </Typography>
+          <Typography color="text.secondary">
+            Once the backend connects cameras, all live feeds will appear here in a multi-camera grid.
+          </Typography>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              lg: 'repeat(3, 1fr)',
+            },
+            gap: 2,
+          }}
+        >
+          {cameras.map((camera) => (
+            <CameraTile
+              key={camera.id}
+              camera={camera}
+              streamUrl={resolveCameraStreamUrl(camera, streamUrl)}
+              violationActive={activeCameraIds.has(camera.id)}
             />
-          ) : (
-            <Typography variant="h6" sx={{ color: '#ffffff', opacity: 0.7 }}>
-              {pipelineStarted ? 'Starting stream...' : 'Stream Not Started'}
-            </Typography>
-          )}
-        </Paper>
-      </Box>
-    </Box>
+          ))}
+        </Box>
+      )}
+    </AppLayout>
   );
 }
