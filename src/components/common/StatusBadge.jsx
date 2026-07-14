@@ -28,10 +28,22 @@ export default function StatusBadge({ label, variant = 'neutral', icon: IconOver
         backgroundColor: style.bg,
         color: style.color,
         whiteSpace: 'nowrap',
+        maxWidth: '100%',
+        overflow: 'hidden',
       }}
     >
-      {Icon && <Icon sx={{ fontSize: 14 }} />}
-      <Typography component="span" sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'inherit', lineHeight: 1.4 }}>
+      {Icon && <Icon sx={{ fontSize: 14, flexShrink: 0 }} />}
+      <Typography
+        component="span"
+        sx={{
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: 'inherit',
+          lineHeight: 1.4,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
         {label}
       </Typography>
     </Box>

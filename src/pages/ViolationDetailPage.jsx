@@ -158,9 +158,26 @@ export default function ViolationDetailPage({ id }) {
 
 function MetaRow({ label, value }) {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75, borderBottom: `1px solid ${palette.borderLight}` }}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography variant="body2" fontWeight={600}>{value}</Typography>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        gap: { xs: 0.25, sm: 2 },
+        py: 0.75,
+        borderBottom: `1px solid ${palette.borderLight}`,
+      }}
+    >
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        fontWeight={600}
+        sx={{ wordBreak: 'break-word', textAlign: { xs: 'left', sm: 'right' } }}
+      >
+        {value}
+      </Typography>
     </Box>
   );
 }

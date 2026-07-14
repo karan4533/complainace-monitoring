@@ -17,7 +17,7 @@ export default function GearChecklist({ selectedGear, onChange }) {
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 2.5, borderRadius: '12px', mb: 3 }}>
+    <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2.5 }, borderRadius: '12px', mb: 3 }}>
       <Typography variant="caption" sx={{ display: 'block', mb: 1.5 }}>
         Enforced PPE Gear
       </Typography>

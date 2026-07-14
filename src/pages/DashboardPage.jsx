@@ -123,13 +123,13 @@ export default function DashboardPage() {
         title="Live Monitoring Dashboard"
         subtitle="Multiple camera live feeds · tiles turn red on active violation"
         action={
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
             <Button
               variant="contained"
               onClick={handleStartStream}
               disabled={loading || (pipelineStarted && !!streamUrl)}
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <PlayCircleFilledIcon />}
-              sx={{ height: 42, px: 2.5 }}
+              sx={{ height: 42, px: 2.5, flex: { xs: 1, sm: 'none' } }}
             >
               {loading ? 'Starting...' : 'Start Stream'}
             </Button>
@@ -141,6 +141,7 @@ export default function DashboardPage() {
                 sx={{
                   height: 42,
                   px: 2.5,
+                  flex: { xs: 1, sm: 'none' },
                   color: palette.error,
                   borderColor: palette.errorBg,
                   backgroundColor: palette.errorBg,

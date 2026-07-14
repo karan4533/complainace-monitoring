@@ -13,16 +13,23 @@ export default function TopHeader({ pipelineLive, onMenuClick, showMenuButton })
       position="fixed"
       elevation={0}
       sx={{
-        width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+        width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
         ml: { md: `${DRAWER_WIDTH}px` },
         backgroundColor: palette.background,
         borderBottom: `1px solid ${palette.borderLight}`,
         color: palette.textPrimary,
       }}
     >
-      <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 2, sm: 3 }, gap: 2 }}>
+      <Toolbar
+        sx={{
+          minHeight: { xs: 56, sm: 64 },
+          px: { xs: 1.5, sm: 3 },
+          gap: { xs: 1, sm: 2 },
+          overflow: 'hidden',
+        }}
+      >
         {showMenuButton && (
-          <IconButton edge="start" onClick={onMenuClick} sx={{ color: palette.textPrimary, mr: -0.5 }}>
+          <IconButton edge="start" onClick={onMenuClick} sx={{ color: palette.textPrimary }}>
             <MenuIcon />
           </IconButton>
         )}
@@ -32,26 +39,44 @@ export default function TopHeader({ pipelineLive, onMenuClick, showMenuButton })
             display: 'inline-flex',
             alignItems: 'center',
             gap: 1,
-            px: 1.25,
+            px: { xs: 0.75, sm: 1.25 },
             py: 0.5,
             borderRadius: '20px',
             border: `1px solid ${palette.border}`,
             backgroundColor: palette.surface,
+            minWidth: 0,
+            flexShrink: 1,
           }}
         >
           <HeuristicLogo size={22} variant="dark" />
-          <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: palette.textPrimary }}>
+          <Typography
+            sx={{
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: palette.textPrimary,
+              display: { xs: 'none', sm: 'block' },
+              whiteSpace: 'nowrap',
+            }}
+          >
             Heuristic Labs
           </Typography>
         </Box>
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-          <StatusBadge
-            label={pipelineLive ? 'Pipeline Operational' : 'Pipeline Idle'}
-            variant={pipelineLive ? 'success' : 'neutral'}
-          />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 2 }, flexShrink: 0 }}>
+          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+            <StatusBadge
+              label={pipelineLive ? 'Pipeline Operational' : 'Pipeline Idle'}
+              variant={pipelineLive ? 'success' : 'neutral'}
+            />
+          </Box>
+          <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+            <StatusBadge
+              label={pipelineLive ? 'Live' : 'Idle'}
+              variant={pipelineLive ? 'success' : 'neutral'}
+            />
+          </Box>
           <IconButton size="small" sx={{ color: palette.textMuted }}>
             <NotificationsNoneOutlinedIcon />
           </IconButton>

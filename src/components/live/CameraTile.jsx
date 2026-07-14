@@ -30,9 +30,17 @@ export default function CameraTile({ camera, streamUrl, violationActive }) {
           />
         </Box>
       </Box>
-      <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography fontWeight={600} fontSize="0.875rem">{camera.name}</Typography>
-        <Typography variant="body2">ID {camera.id}</Typography>
+      <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+        <Typography
+          fontWeight={600}
+          fontSize="0.875rem"
+          sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        >
+          {camera.name}
+        </Typography>
+        <Typography variant="body2" sx={{ flexShrink: 0 }}>
+          ID {camera.id}
+        </Typography>
       </Box>
     </Paper>
   );

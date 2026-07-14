@@ -68,11 +68,19 @@ export default function ZoneCanvas({ previewUrl, zones, onZonesChange }) {
   };
 
   return (
-    <Paper elevation={0} sx={{ p: 2.5, borderRadius: '12px' }}>
+    <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2.5 }, borderRadius: '12px' }}>
       <Typography variant="caption" sx={{ display: 'block', mb: 1.5 }}>
         Detection Zones (optional)
       </Typography>
-      <Box sx={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#111' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          borderRadius: '10px',
+          overflow: 'hidden',
+          backgroundColor: '#111',
+          maxWidth: '100%',
+        }}
+      >
         {previewUrl ? (
           <Box
             component="img"
@@ -81,8 +89,18 @@ export default function ZoneCanvas({ previewUrl, zones, onZonesChange }) {
             sx={{ width: '100%', display: 'block', maxHeight: 360, objectFit: 'cover' }}
           />
         ) : (
-          <Box sx={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography sx={{ color: 'rgba(255,255,255,0.5)' }}>Live preview unavailable — draw zones on canvas</Typography>
+          <Box
+            sx={{
+              height: { xs: 200, sm: 280 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              px: 2,
+            }}
+          >
+            <Typography sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontSize: { xs: '0.8125rem', sm: '1rem' } }}>
+              Live preview unavailable — draw zones on canvas
+            </Typography>
           </Box>
         )}
         <canvas

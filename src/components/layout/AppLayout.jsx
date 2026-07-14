@@ -22,12 +22,26 @@ export default function AppLayout({ children, activePage, pipelineLive = false }
         component="main"
         sx={{
           flexGrow: 1,
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          maxWidth: '100%',
+          minWidth: 0,
           minHeight: '100vh',
+          overflowX: 'hidden',
         }}
       >
         <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }} />
-        <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pb: 4, pt: { xs: 1, sm: 2 } }}>{children}</Box>
+        <Box
+          sx={{
+            px: { xs: 1.5, sm: 3, md: 4 },
+            pb: { xs: 3, md: 4 },
+            pt: { xs: 1, sm: 2 },
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Box>
   );

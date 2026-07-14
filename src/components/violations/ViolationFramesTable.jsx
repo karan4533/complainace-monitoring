@@ -10,6 +10,8 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import StatusBadge from '../common/StatusBadge';
@@ -17,13 +19,86 @@ import { frameKey } from '../../utils/reportUtils';
 import { palette } from '../../theme/theme';
 
 export default function ViolationFramesTable({ frames, imageUrl, onSelect }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  if (isMobile) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {frames.length === 0 && (
+          <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: '12px' }}>
+            <Typography color="text.secondary">No violation reports available.</Typography>
+          </Paper>
+        )}
+        {frames.map((frame) => (
+          <Paper
+            key={frameKey(frame)}
+            elevation={0}
+            onClick={() => onSelect(frame)}
+            sx={{
+              borderRadius: '12px',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              '&:active': { opacity: 0.92 },
+            }}
+          >
+            <Box sx={{ display: 'flex', gap: 1.5, p: 1.5 }}>
+              <Box
+                component="img"
+                src={imageUrl(frame)}
+                alt="Violation snapshot"
+                sx={{
+                  width: 88,
+                  height: 64,
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  backgroundColor: '#111',
+                  flexShrink: 0,
+                }}
+              />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                  <Typography fontWeight={700} fontSize="0.9rem">
+                    Camera {frame.stream_id}
+                  </Typography>
+                  <StatusBadge label={`${frame.violations.length}`} variant="error" />
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: palette.textSecondary,
+                    fontSize: '0.75rem',
+                    mt: 0.5,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {frame.timestamp}
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                  {frame.violations.slice(0, 3).map((v) => (
+                    <StatusBadge key={v.id} label={v.label} variant="tag" />
+                  ))}
+                </Box>
+              </Box>
+              <IconButton size="small" sx={{ alignSelf: 'center' }}>
+                <ChevronRightIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Paper>
+        ))}
+      </Box>
+    );
+  }
+
   return (
     <TableContainer
       component={Paper}
       elevation={0}
-      sx={{ borderRadius: '12px', overflowX: 'auto' }}
+      sx={{ borderRadius: '12px', overflowX: 'auto', maxWidth: '100%' }}
     >
-      <Table sx={{ minWidth: 720 }}>
+      <Table sx={{ minWidth: 680 }}>
         <TableHead>
           <TableRow sx={{ backgroundColor: palette.background }}>
             {['Snapshot', 'Camera ID', 'Violations', 'Types', 'Timestamp', ''].map((h) => (
@@ -54,8 +129,8 @@ export default function ViolationFramesTable({ frames, imageUrl, onSelect }) {
                   src={imageUrl(frame)}
                   alt="Violation snapshot"
                   sx={{
-                    width: 96,
-                    height: 64,
+                    width: { sm: 80, md: 96 },
+                    height: { sm: 54, md: 64 },
                     objectFit: 'cover',
                     borderRadius: '8px',
                     backgroundColor: '#111',
@@ -69,10 +144,7 @@ export default function ViolationFramesTable({ frames, imageUrl, onSelect }) {
                 </Typography>
               </TableCell>
               <TableCell>
-                <StatusBadge
-                  label={`${frame.violations.length} in frame`}
-                  variant="error"
-                />
+                <StatusBadge label={`${frame.violations.length} in frame`} variant="error" />
               </TableCell>
               <TableCell>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, maxWidth: 280 }}>
@@ -91,7 +163,13 @@ export default function ViolationFramesTable({ frames, imageUrl, onSelect }) {
                 </Typography>
               </TableCell>
               <TableCell align="right">
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onSelect(frame); }}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(frame);
+                  }}
+                >
                   <ChevronRightIcon fontSize="small" />
                 </IconButton>
               </TableCell>

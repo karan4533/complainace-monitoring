@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Box, CircularProgress, MenuItem, TextField, Typography } from '@mui/material';
 import AppLayout from '../components/layout/AppLayout';
 import PageHeader from '../components/common/PageHeader';
 import ReportToolbar from '../components/reports/ReportToolbar';
@@ -8,26 +8,63 @@ import ViolationDrawer from '../components/reports/ViolationDrawer';
 import { API_BASE } from '../config/api';
 import { useViolationFrames } from '../hooks/useViolationFrames';
 import { downloadPdfReport } from '../services/reportService';
-import { toBackendDate } from '../utils/reportUtils';
+import { filterReportFrames, toBackendDate } from '../utils/reportUtils';
+import { getDefaultReportDateRange } from '../data/mockReports';
+import { palette } from '../theme/theme';
+
+const defaultRange = getDefaultReportDateRange();
 
 export default function ViolationsPage() {
   const { frames, loading } = useViolationFrames();
   const [selectedFrame, setSelectedFrame] = useState(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startDate, setStartDate] = useState(defaultRange.startDate);
+  const [endDate, setEndDate] = useState(defaultRange.endDate);
+  const [startTime, setStartTime] = useState(defaultRange.startTime);
+  const [endTime, setEndTime] = useState(defaultRange.endTime);
+  const [cameraId, setCameraId] = useState('');
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const filteredFrames = frames;
 
-  const imageUrl = (frame) =>
-    `${API_BASE}/stored_images/${frame.image_path.split('/').pop()}`;
+  const cameras = useMemo(() => {
+    const map = new Map();
+    frames.forEach((frame) => {
+      if (!map.has(frame.stream_id)) {
+        map.set(frame.stream_id, { id: frame.stream_id, name: `Camera ${frame.stream_id}` });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => Number(a.id) - Number(b.id));
+  }, [frames]);
+
+  const filteredFrames = useMemo(
+    () =>
+      filterReportFrames(frames, {
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        cameraId,
+      }),
+    [frames, startDate, endDate, startTime, endTime, cameraId]
+  );
+
+  const imageUrl = (frame) => {
+    const filename = frame.image_path?.split('/').pop() || '';
+    if (!filename || filename.startsWith('mock_')) {
+      const label = encodeURIComponent(`Cam ${frame.stream_id}`);
+      return `https://placehold.co/320x200/1a1a1a/ffffff?text=${label}`;
+    }
+    return `${API_BASE}/stored_images/${filename}`;
+  };
 
   const handleDownload = async () => {
     if (!startDate || !endDate) {
       alert('Please select both a start and end date.');
       return;
     }
+    if (endDate < startDate) {
+      alert('End date cannot be before start date.');
+      return;
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
     try {
@@ -37,6 +74,8 @@ export default function ViolationsPage() {
         endDate: toBackendDate(endDate),
         startTime,
         endTime,
+        isoStartDate: startDate,
+        isoEndDate: endDate,
         signal: controller.signal,
       });
       const blobUrl = window.URL.createObjectURL(blob);
@@ -59,8 +98,38 @@ export default function ViolationsPage() {
     <AppLayout activePage="reports">
       <PageHeader
         title="PPE Violation Reports"
-        subtitle={`${filteredFrames.length} captured frame${filteredFrames.length !== 1 ? 's' : ''} · click a row for full details`}
+        subtitle={`${filteredFrames.length} of ${frames.length} frame${frames.length !== 1 ? 's' : ''} · filtered by date/time`}
       />
+
+      <Box
+        sx={{
+          mb: 2,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1.5,
+          alignItems: 'flex-end',
+        }}
+      >
+        <Box sx={{ minWidth: { xs: '100%', sm: 180 }, width: { xs: '100%', sm: 'auto' } }}>
+          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: palette.textSecondary, mb: 0.5 }}>
+            Camera
+          </Typography>
+          <TextField
+            select
+            size="small"
+            fullWidth
+            value={cameraId}
+            onChange={(e) => setCameraId(e.target.value)}
+          >
+            <MenuItem value="">All cameras</MenuItem>
+            {cameras.map((c) => (
+              <MenuItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
+      </Box>
 
       <ReportToolbar
         startDate={startDate}

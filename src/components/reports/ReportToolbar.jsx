@@ -19,17 +19,30 @@ export default function ReportToolbar({
     <Box
       sx={{
         display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
         flexWrap: 'wrap',
         gap: 2,
-        alignItems: 'flex-end',
-        p: { xs: 2, sm: 2.5 },
+        alignItems: { xs: 'stretch', md: 'flex-end' },
+        p: { xs: 1.75, sm: 2.5 },
         backgroundColor: palette.surface,
         borderRadius: '12px',
         border: `1px solid ${palette.borderLight}`,
         mb: 3,
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, flex: 1 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: '1fr 1fr',
+            md: 'repeat(4, minmax(0, 1fr))',
+          },
+          gap: 1.5,
+          flex: 1,
+          width: '100%',
+        }}
+      >
         <DateField label="From date" value={startDate} onChange={onStartDateChange} />
         <DateField label="From time (optional)" value={startTime} onChange={onStartTimeChange} type="time" muted />
         <DateField label="To date" value={endDate} onChange={onEndDateChange} />
@@ -41,7 +54,13 @@ export default function ReportToolbar({
         onClick={onDownload}
         disabled={downloading || !startDate || !endDate}
         startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
-        sx={{ height: 42, px: 2.5, whiteSpace: 'nowrap' }}
+        sx={{
+          height: 42,
+          px: 2.5,
+          whiteSpace: 'nowrap',
+          width: { xs: '100%', md: 'auto' },
+          flexShrink: 0,
+        }}
       >
         {downloading ? 'Generating...' : 'Download PDF Report'}
       </Button>
@@ -51,8 +70,14 @@ export default function ReportToolbar({
 
 function DateField({ label, value, onChange, type = 'date', muted }) {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: { xs: '100%', sm: 150 } }}>
-      <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: muted ? palette.textMuted : palette.textSecondary }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0, width: '100%' }}>
+      <Typography
+        sx={{
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: muted ? palette.textMuted : palette.textSecondary,
+        }}
+      >
         {label}
       </Typography>
       <TextField
@@ -61,7 +86,6 @@ function DateField({ label, value, onChange, type = 'date', muted }) {
         onChange={(e) => onChange(e.target.value)}
         size="small"
         fullWidth
-        sx={{ maxWidth: { sm: type === 'time' ? 140 : 170 } }}
       />
     </Box>
   );

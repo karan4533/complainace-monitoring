@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { WS_BASE } from '../config/api';
 import { fetchViolations } from '../services/violationService';
-import { frameKey, mergeFlatEntriesIntoGroups } from '../utils/reportUtils';
+import { mergeFlatEntriesIntoGroups } from '../utils/reportUtils';
+import { MOCK_REPORT_ENTRIES } from '../data/mockReports';
 
 const MAX_FRAMES = 100;
 
@@ -24,9 +25,14 @@ export function useViolationFrames({ enabled = true } = {}) {
     const hydrate = async () => {
       try {
         const data = await fetchViolations({ limit: MAX_FRAMES });
-        setFrames(mergeFrames(data.reverse(), []));
+        if (!data?.length) {
+          setFrames(mergeFrames([...MOCK_REPORT_ENTRIES].reverse(), []));
+        } else {
+          setFrames(mergeFrames(data.reverse(), []));
+        }
       } catch (err) {
-        console.error('Failed to load violation frames:', err);
+        console.error('Failed to load violation frames, using mock data:', err);
+        setFrames(mergeFrames([...MOCK_REPORT_ENTRIES].reverse(), []));
       } finally {
         setLoading(false);
       }

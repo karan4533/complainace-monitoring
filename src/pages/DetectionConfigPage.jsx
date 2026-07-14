@@ -72,7 +72,12 @@ export default function DetectionConfigPage({ cameraId }) {
           <GearChecklist selectedGear={selectedGear} onChange={setSelectedGear} />
           <ZoneCanvas previewUrl="" zones={zones} onZonesChange={setZones} />
           {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
-          <Button variant="contained" sx={{ mt: 2 }} onClick={handleSave} disabled={saving}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saving}
+            sx={{ mt: 2, width: { xs: '100%', sm: 'auto' }, height: 44 }}
+          >
             {saving ? 'Saving...' : 'Save Configuration'}
           </Button>
         </>

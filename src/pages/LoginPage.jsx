@@ -41,7 +41,8 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        px: 2,
+        px: { xs: 1.5, sm: 2 },
+        py: { xs: 3, sm: 0 },
         background: `linear-gradient(160deg, ${palette.background} 0%, #EFE6DA 45%, #E4D5C3 100%)`,
       }}
     >
@@ -50,15 +51,15 @@ export default function LoginPage() {
         sx={{
           width: '100%',
           maxWidth: 420,
-          p: { xs: 3, sm: 4 },
-          borderRadius: '16px',
+          p: { xs: 2.5, sm: 4 },
+          borderRadius: { xs: '14px', sm: '16px' },
           border: `1px solid ${palette.border}`,
           boxShadow: '0 12px 40px rgba(80, 56, 31, 0.12)',
         }}
       >
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Box sx={{ display: 'inline-flex', mb: 2 }}>
-            <HeuristicLogo size={72} variant="dark" />
+            <HeuristicLogo size={64} variant="dark" />
           </Box>
           <Typography
             sx={{

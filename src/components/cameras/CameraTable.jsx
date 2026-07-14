@@ -52,14 +52,23 @@ export default function CameraTable({ cameras, onAdd, onRemove, onSelect, loadin
 
   return (
     <>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+      <Box sx={{ display: 'flex', justifyContent: { xs: 'stretch', sm: 'flex-end' }, mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setOpen(true)}
+          sx={{ width: { xs: '100%', sm: 'auto' } }}
+        >
           Add Camera
         </Button>
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '12px' }}>
-        <Table>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ borderRadius: '12px', overflowX: 'auto', maxWidth: '100%' }}
+      >
+        <Table sx={{ minWidth: 560 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: palette.background }}>
               {['Camera', 'RTSP URL', 'Status', 'Actions'].map((h) => (
@@ -89,7 +98,15 @@ export default function CameraTable({ cameras, onAdd, onRemove, onSelect, loadin
                   <Typography variant="body2">ID: {camera.id}</Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" sx={{ maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      maxWidth: { xs: 120, sm: 220, md: 280 },
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {camera.rtsp_url || camera.rtspUrl}
                   </Typography>
                 </TableCell>
