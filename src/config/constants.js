@@ -1,11 +1,48 @@
 export const PPE_GEAR_OPTIONS = [
-  { id: 'hardhat', label: 'Hard Hat', keyword: 'hardhat' },
-  { id: 'vest', label: 'Safety Vest', keyword: 'vest' },
-  { id: 'mask', label: 'Face Mask', keyword: 'mask' },
-  { id: 'gloves', label: 'Gloves', keyword: 'gloves' },
-  { id: 'goggles', label: 'Safety Goggles', keyword: 'goggles' },
-  { id: 'boots', label: 'Safety Boots', keyword: 'boots' },
+  {
+    id: 'hardhat',
+    label: 'Hard Hat',
+    keyword: 'hardhat',
+    description: 'Flag workers not wearing a hard hat / helmet in the frame.',
+  },
+  {
+    id: 'vest',
+    label: 'Safety Vest',
+    keyword: 'vest',
+    description: 'Flag workers without a high-visibility safety vest.',
+  },
+  {
+    id: 'mask',
+    label: 'Face Mask',
+    keyword: 'mask',
+    description: 'Flag workers not wearing a required face mask.',
+  },
+  {
+    id: 'gloves',
+    label: 'Gloves',
+    keyword: 'gloves',
+    description: 'Flag workers without protective gloves.',
+  },
+  {
+    id: 'goggles',
+    label: 'Safety Goggles',
+    keyword: 'goggles',
+    description: 'Flag workers not wearing eye protection.',
+  },
+  {
+    id: 'boots',
+    label: 'Safety Boots',
+    keyword: 'boots',
+    description: 'Flag workers without safety footwear.',
+  },
 ];
+
+export const DEFAULT_INPUT_CONFIG = {
+  enabledDetections: PPE_GEAR_OPTIONS.map((g) => g.id),
+  confidenceThreshold: 0.55,
+  applyToAllCameras: true,
+  cameraIds: [],
+};
 
 export const CAMERA_STATUS = {
   ONLINE: 'online',

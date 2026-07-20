@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CamerasPage from './pages/CamerasPage';
 import DetectionConfigPage from './pages/DetectionConfigPage';
+import DetectionInputsPage from './pages/DetectionInputsPage';
 import ViolationsPage from './pages/ViolationsPage';
 import ViolationDetailPage from './pages/ViolationDetailPage';
 import SettingsPage from './pages/SettingsPage';
@@ -39,6 +40,8 @@ export default function App() {
       return <CamerasPage />;
     case 'detection-config':
       return <DetectionConfigPage cameraId={route.params.cameraId} />;
+    case 'input-config':
+      return <DetectionInputsPage />;
     case 'reports':
       return <ViolationsPage />;
     case 'violation-detail':

@@ -2,6 +2,7 @@ export const ROUTES = {
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
   ADD_STREAM: '/add-stream',
+  INPUT_CONFIG: '/input-config',
   REPORTS: '/reports',
   SETTINGS: '/settings',
   DETECTION_CONFIG: '/detection-config',
@@ -17,6 +18,13 @@ export function parseHashRoute() {
   if (segments[0] === 'login') return { page: 'login', params };
   if (segments[0] === 'add-stream' || segments[0] === 'cameras') return { page: 'add-stream', params };
   if (segments[0] === 'live') return { page: 'dashboard', params };
+  if (
+    segments[0] === 'input-config' ||
+    segments[0] === 'detection-inputs' ||
+    segments[0] === 'detection'
+  ) {
+    return { page: 'input-config', params };
+  }
   if (segments[0] === 'detection-config') {
     return { page: 'detection-config', params: { ...params, cameraId: segments[1] || params.cameraId } };
   }
@@ -39,6 +47,7 @@ export function navigateTo(page, options = {}) {
     login: '#/login',
     dashboard: '#/dashboard',
     'add-stream': '#/add-stream',
+    'input-config': '#/input-config',
     'detection-config': cameraId ? `#/detection-config/${cameraId}${suffix}` : `#/detection-config${suffix}`,
     reports: '#/reports',
     violations: '#/reports',

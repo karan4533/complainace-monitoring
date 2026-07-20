@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -28,6 +29,7 @@ const DRAWER_WIDTH = 260;
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon, page: 'dashboard' },
   { id: 'add-stream', label: 'Add Stream', icon: AddBoxOutlinedIcon, page: 'add-stream' },
+  { id: 'input-config', label: 'Input Config', icon: TuneOutlinedIcon, page: 'input-config' },
   { id: 'reports', label: 'Reports', icon: AssessmentOutlinedIcon, page: 'reports' },
   { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, page: 'settings' },
 ];

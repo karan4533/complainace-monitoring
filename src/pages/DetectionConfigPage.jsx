@@ -7,6 +7,7 @@ import GearChecklist from '../components/detection/GearChecklist';
 import ZoneCanvas from '../components/detection/ZoneCanvas';
 import { navigateTo } from '../config/routes';
 import { getDetectionConfig, saveDetectionConfig } from '../services/detectionService';
+import { getInputConfig } from '../services/inputConfigService';
 import { PPE_GEAR_OPTIONS } from '../config/constants';
 
 export default function DetectionConfigPage({ cameraId }) {
@@ -20,9 +21,13 @@ export default function DetectionConfigPage({ cameraId }) {
     if (!cameraId) return;
     (async () => {
       try {
-        const config = await getDetectionConfig(cameraId);
-        if (config.enforced_gear) setSelectedGear(config.enforced_gear);
-        if (config.zones) setZones(config.zones);
+        const [config, inputConfig] = await Promise.all([
+          getDetectionConfig(cameraId).catch(() => null),
+          getInputConfig().catch(() => null),
+        ]);
+        if (config?.enforced_gear) setSelectedGear(config.enforced_gear);
+        else if (inputConfig?.enabledDetections?.length) setSelectedGear(inputConfig.enabledDetections);
+        if (config?.zones) setZones(config.zones);
       } catch {
         /* use defaults */
       } finally {
@@ -47,8 +52,15 @@ export default function DetectionConfigPage({ cameraId }) {
   if (!cameraId) {
     return (
       <AppLayout activePage="detection-config">
-        <Alert severity="info">Select a camera from Camera Management to configure detection.</Alert>
-        <Button sx={{ mt: 2 }} onClick={() => navigateTo('add-stream')}>Go to Add Stream</Button>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Pick a camera from Add Stream for zone drawing, or set site-wide detection inputs first.
+        </Alert>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          <Button variant="contained" onClick={() => navigateTo('input-config')}>
+            Open Input Config
+          </Button>
+          <Button onClick={() => navigateTo('add-stream')}>Go to Add Stream</Button>
+        </Box>
       </AppLayout>
     );
   }
