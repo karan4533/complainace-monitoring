@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:check": "vite build && echo Build succeeded",
     "preview": "vite preview",
+    "serve": "vite preview --host 0.0.0.0",
     "docs:pdf": "node scripts/generate-docs-pdf.mjs"
   },
   "dependencies": {
