@@ -1,16 +1,5 @@
-import { apiFetch } from './apiClient';
+import api from '../api';
 
-export async function login(username, password) {
-  return apiFetch('/api/auth/login', {
-    method: 'POST',
-    body: { username, password },
-  });
-}
-
-export async function logout() {
-  return apiFetch('/api/auth/logout', { method: 'POST' });
-}
-
-export async function getSession() {
-  return apiFetch('/api/auth/me');
-}
+export const login = api.auth.login;
+export const logout = api.auth.logout;
+export const getSession = api.auth.getSession;
