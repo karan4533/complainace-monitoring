@@ -6,11 +6,11 @@ import { navigateTo } from './config/routes';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CamerasPage from './pages/CamerasPage';
-import DetectionConfigPage from './pages/DetectionConfigPage';
 import DetectionInputsPage from './pages/DetectionInputsPage';
 import ViolationsPage from './pages/ViolationsPage';
 import ViolationDetailPage from './pages/ViolationDetailPage';
-import SettingsPage from './pages/SettingsPage';
+import SopReportsPage from './pages/SopReportsPage';
+
 
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
@@ -38,12 +38,12 @@ export default function App() {
       return <DashboardPage />;
     case 'add-stream':
       return <CamerasPage />;
-    case 'detection-config':
-      return <DetectionConfigPage cameraId={route.params.cameraId} />;
     case 'input-config':
       return <DetectionInputsPage />;
     case 'reports':
       return <ViolationsPage />;
+    case 'sop-reports':
+      return <SopReportsPage />;
     case 'violation-detail':
       return <ViolationDetailPage id={route.params.id} />;
     case 'settings':

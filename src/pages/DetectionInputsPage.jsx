@@ -1,109 +1,135 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  CircularProgress,
-  FormControlLabel,
-  Paper,
-  Slider,
-  Typography,
-} from '@mui/material';
-import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Box, CircularProgress } from '@mui/material';
 import AppLayout from '../components/layout/AppLayout';
 import PageHeader from '../components/common/PageHeader';
-import DetectionTypeCards from '../components/detection/DetectionTypeCards';
-import { DEFAULT_INPUT_CONFIG } from '../config/constants';
-import { getInputConfig, saveInputConfig } from '../services/inputConfigService';
-import { fetchCameras } from '../services/cameraService';
-import { palette } from '../theme/theme';
+import SopCameraList from '../components/sop/SopCameraList';
+import SopSequenceEditor from '../components/sop/SopSequenceEditor';
+import { fetchSopConfigs, saveStreamSopConfig, deleteStreamSopConfig } from '../services/sopConfigService';
+import { fetchStreams } from '../services/streamService';
+import {
+  configsByStreamId,
+  mergeStreamLists,
+  parseSopStepsText,
+  sopStepsToText,
+} from '../utils/sopUtils';
 
 export default function DetectionInputsPage() {
-  const [config, setConfig] = useState({ ...DEFAULT_INPUT_CONFIG });
-  const [cameras, setCameras] = useState([]);
+  const [streams, setStreams] = useState([]);
+  const [configMap, setConfigMap] = useState(new Map());
+  const [selectedStreamId, setSelectedStreamId] = useState(null);
+  const [stepsText, setStepsText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [saved, cams] = await Promise.all([
-          getInputConfig(),
-          fetchCameras().catch(() => [
-            { id: 1, name: 'Camera 1' },
-            { id: 2, name: 'Camera 2' },
-            { id: 3, name: 'Camera 3' },
-            { id: 4, name: 'Camera 4' },
-            { id: 5, name: 'Camera 5' },
-          ]),
-        ]);
-        setConfig(saved);
-        setCameras(Array.isArray(cams) ? cams : []);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const loadData = useCallback(async () => {
+    setLoadError('');
+    try {
+      const [streamList, sopStreams] = await Promise.all([
+        fetchStreams(),
+        fetchSopConfigs().catch(() => []),
+      ]);
+      const merged = mergeStreamLists(streamList, sopStreams);
+      setStreams(merged);
+      setConfigMap(configsByStreamId(sopStreams));
+      setSelectedStreamId((current) => current ?? merged[0]?.id ?? null);
+    } catch (err) {
+      setLoadError(err.message || 'Failed to load SOP workflows.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const update = (patch) => setConfig((prev) => ({ ...prev, ...patch }));
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const toggleCamera = (id) => {
-    const ids = config.cameraIds.map(String).includes(String(id))
-      ? config.cameraIds.filter((x) => String(x) !== String(id))
-      : [...config.cameraIds, id];
-    update({ cameraIds: ids });
+  const selectedStream = useMemo(
+    () => streams.find((s) => Number(s.id) === Number(selectedStreamId)),
+    [streams, selectedStreamId]
+  );
+
+  const existingConfig = configMap.get(Number(selectedStreamId));
+  const isExisting = Boolean(existingConfig?.sop_steps?.length);
+
+  useEffect(() => {
+    if (selectedStreamId == null) {
+      setStepsText('');
+      return;
+    }
+    const cfg = configMap.get(Number(selectedStreamId));
+    setStepsText(sopStepsToText(cfg?.sop_steps ?? []));
+    setSaveError('');
+  }, [selectedStreamId, configMap]);
+
+  const handleSelect = (streamId) => {
+    setSelectedStreamId(streamId);
+    setMessage('');
+    setSaveError('');
   };
 
   const handleSave = async () => {
-    if (!config.enabledDetections.length) {
-      setError('Select at least one item to detect.');
-      setMessage('');
-      return;
-    }
-    if (!config.applyToAllCameras && !config.cameraIds.length) {
-      setError('Select at least one camera, or apply to all cameras.');
-      setMessage('');
+    if (!selectedStreamId) return;
+    const sopSteps = parseSopStepsText(stepsText);
+    if (!sopSteps.length) {
+      setSaveError('Enter at least one SOP step (one per line).');
       return;
     }
 
     setSaving(true);
-    setError('');
+    setSaveError('');
     setMessage('');
     try {
-      const result = await saveInputConfig(config);
+      const result = await saveStreamSopConfig(selectedStreamId, sopSteps);
+      const saved = result?.config ?? {
+        stream_id: Number(selectedStreamId),
+        sop_steps: sopSteps,
+        updated_at: new Date().toISOString(),
+      };
+      setConfigMap((prev) => {
+        const next = new Map(prev);
+        next.set(Number(selectedStreamId), saved);
+        return next;
+      });
       setMessage(
-        result?._localOnly
-          ? 'Input configuration saved on this device. Backend sync will apply when the API is available.'
-          : 'Input configuration saved. The pipeline will use these detection inputs.'
+        `SOP sequence ${isExisting ? 'updated' : 'saved'} for ${selectedStream?.name || `Stream ${selectedStreamId}`}.`
       );
-    } catch {
-      setError('Could not save input configuration.');
+    } catch (err) {
+      setSaveError(err.message || 'Failed to save SOP sequence.');
     } finally {
       setSaving(false);
     }
   };
 
-  const selectedCount = config.enabledDetections.length;
+  const handleDelete = async () => {
+    if (!selectedStreamId || !isExisting) return;
+    setDeleting(true);
+    setMessage('');
+    setLoadError('');
+    try {
+      await deleteStreamSopConfig(selectedStreamId);
+      setConfigMap((prev) => {
+        const next = new Map(prev);
+        next.delete(Number(selectedStreamId));
+        return next;
+      });
+      setStepsText('');
+      setMessage(`SOP sequence removed for Stream ${selectedStreamId}.`);
+    } catch (err) {
+      setLoadError(err.message || 'Failed to delete SOP sequence.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <AppLayout activePage="input-config">
       <PageHeader
-        title="Input Configuration"
-        subtitle="Choose what the system should detect · PPE missing gear alerts"
-        action={
-          <Button
-            variant="contained"
-            startIcon={<SaveOutlinedIcon />}
-            onClick={handleSave}
-            disabled={saving || loading}
-            sx={{ height: 42, px: 2.5 }}
-          >
-            {saving ? 'Saving...' : 'Save Inputs'}
-          </Button>
-        }
+        title="SOP Workflows"
+        subtitle="Configure ordered SOP steps per camera stream"
       />
 
       {loading ? (
@@ -111,135 +137,47 @@ export default function DetectionInputsPage() {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, maxWidth: 960 }}>
-          {(message || error) && (
-            <Alert severity={error ? 'error' : 'success'} onClose={() => { setMessage(''); setError(''); }}>
-              {error || message}
+        <Box>
+          {loadError && (
+            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setLoadError('')}>
+              {loadError}
+            </Alert>
+          )}
+          {message && (
+            <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMessage('')}>
+              {message}
             </Alert>
           )}
 
-          <Section
-            title="What to detect"
-            hint={`${selectedCount} of ${DEFAULT_INPUT_CONFIG.enabledDetections.length} selected · click a card to toggle`}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: '260px 1fr' },
+              gap: 2,
+              alignItems: 'stretch',
+            }}
           >
-            <DetectionTypeCards
-              selectedIds={config.enabledDetections}
-              onChange={(enabledDetections) => update({ enabledDetections })}
+            <SopCameraList
+              streams={streams}
+              configMap={configMap}
+              selectedStreamId={selectedStreamId}
+              onSelect={handleSelect}
             />
-          </Section>
-
-          <Section
-            title="Detection sensitivity"
-            hint="Higher confidence means fewer false alerts, but some real issues may be missed"
-          >
-            <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: '12px' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: palette.textPrimary }}>
-                  Minimum confidence
-                </Typography>
-                <Typography sx={{ fontWeight: 700, fontSize: '0.875rem', color: palette.primary }}>
-                  {Math.round(config.confidenceThreshold * 100)}%
-                </Typography>
-              </Box>
-              <Slider
-                value={config.confidenceThreshold}
-                min={0.3}
-                max={0.95}
-                step={0.05}
-                onChange={(_, value) => update({ confidenceThreshold: value })}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(v) => `${Math.round(v * 100)}%`}
-                sx={{ color: palette.primary, maxWidth: 480 }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', maxWidth: 480 }}>
-                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  More alerts
-                </Typography>
-                <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                  Fewer, higher-confidence alerts
-                </Typography>
-              </Box>
-            </Paper>
-          </Section>
-
-          <Section title="Apply to cameras" hint="Use the same detection inputs on every stream, or pick specific cameras">
-            <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: '12px' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={config.applyToAllCameras}
-                    onChange={(e) => update({ applyToAllCameras: e.target.checked })}
-                  />
-                }
-                label="Apply to all cameras"
-              />
-
-              {!config.applyToAllCameras && (
-                <Box
-                  sx={{
-                    mt: 1.5,
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                    gap: 0.5,
-                  }}
-                >
-                  {cameras.map((cam) => (
-                    <FormControlLabel
-                      key={cam.id}
-                      control={
-                        <Checkbox
-                          checked={config.cameraIds.map(String).includes(String(cam.id))}
-                          onChange={() => toggleCamera(cam.id)}
-                        />
-                      }
-                      label={cam.name || `Camera ${cam.id}`}
-                    />
-                  ))}
-                  {!cameras.length && (
-                    <Typography variant="body2">No cameras configured yet. Add a stream first.</Typography>
-                  )}
-                </Box>
-              )}
-            </Paper>
-          </Section>
-
-          <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<SaveOutlinedIcon />}
-              onClick={handleSave}
-              disabled={saving}
-              sx={{ height: 44 }}
-            >
-              {saving ? 'Saving...' : 'Save Inputs'}
-            </Button>
+            <SopSequenceEditor
+              stream={selectedStream}
+              streamId={selectedStreamId ?? ''}
+              stepsText={stepsText}
+              onStepsChange={setStepsText}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              saving={saving}
+              deleting={deleting}
+              error={saveError}
+              isExisting={isExisting}
+            />
           </Box>
         </Box>
       )}
     </AppLayout>
-  );
-}
-
-function Section({ title, hint, children }) {
-  return (
-    <Box>
-      <Typography
-        sx={{
-          fontWeight: 700,
-          fontSize: '1rem',
-          color: palette.textPrimary,
-          mb: 0.5,
-        }}
-      >
-        {title}
-      </Typography>
-      {hint && (
-        <Typography sx={{ fontSize: '0.8125rem', color: palette.textSecondary, mb: 1.5 }}>
-          {hint}
-        </Typography>
-      )}
-      {children}
-    </Box>
   );
 }

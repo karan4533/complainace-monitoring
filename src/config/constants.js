@@ -3,46 +3,54 @@ export const PPE_GEAR_OPTIONS = [
     id: 'hardhat',
     label: 'Hard Hat',
     keyword: 'hardhat',
-    description: 'Flag workers not wearing a hard hat / helmet in the frame.',
+    description: 'Monitor whether workers are wearing a hard hat / helmet.',
+    sopStep: 'Detect hard hat / helmet compliance.',
   },
   {
     id: 'vest',
     label: 'Safety Vest',
     keyword: 'vest',
-    description: 'Flag workers without a high-visibility safety vest.',
+    description: 'Monitor whether workers are wearing a high-visibility safety vest.',
+    sopStep: 'Detect safety vest compliance.',
   },
   {
     id: 'mask',
     label: 'Face Mask',
     keyword: 'mask',
-    description: 'Flag workers not wearing a required face mask.',
+    description: 'Monitor whether workers are wearing a required face mask.',
+    sopStep: 'Detect face mask compliance.',
   },
   {
     id: 'gloves',
     label: 'Gloves',
     keyword: 'gloves',
-    description: 'Flag workers without protective gloves.',
+    description: 'Monitor whether workers are wearing protective gloves.',
+    sopStep: 'Detect protective gloves compliance.',
   },
   {
     id: 'goggles',
     label: 'Safety Goggles',
     keyword: 'goggles',
-    description: 'Flag workers not wearing eye protection.',
+    description: 'Monitor whether workers are wearing eye protection.',
+    sopStep: 'Detect safety goggles compliance.',
   },
   {
     id: 'boots',
     label: 'Safety Boots',
     keyword: 'boots',
-    description: 'Flag workers without safety footwear.',
+    description: 'Monitor whether workers are wearing safety footwear.',
+    sopStep: 'Detect safety boots compliance.',
   },
 ];
 
-export const DEFAULT_INPUT_CONFIG = {
-  enabledDetections: PPE_GEAR_OPTIONS.map((g) => g.id),
-  confidenceThreshold: 0.55,
-  applyToAllCameras: true,
-  cameraIds: [],
-};
+/** Default camera streams when backend has no /api/cameras endpoint. */
+export const DEFAULT_STREAMS = [
+  { id: 1, name: 'Camera 1' },
+  { id: 2, name: 'Camera 2' },
+  { id: 3, name: 'Camera 3' },
+  { id: 4, name: 'Camera 4' },
+  { id: 5, name: 'Camera 5' },
+];
 
 export const CAMERA_STATUS = {
   ONLINE: 'online',

@@ -18,8 +18,16 @@ export async function apiFetch(path, options = {}) {
   const data = contentType.includes('application/json') ? await response.json() : await response.text();
 
   if (!response.ok) {
-    const message = typeof data === 'object' ? data.detail || data.message : data;
-    throw new Error(message || `Request failed (${response.status})`);
+    let message = `Request failed (${response.status})`;
+    if (typeof data === 'object' && data != null) {
+      if (typeof data.detail === 'string') message = data.detail;
+      else if (Array.isArray(data.detail)) {
+        message = data.detail.map((d) => d.msg || d.message || JSON.stringify(d)).join('; ');
+      } else if (data.message) message = data.message;
+    } else if (typeof data === 'string' && data) {
+      message = data;
+    }
+    throw new Error(message);
   }
 
   return data;

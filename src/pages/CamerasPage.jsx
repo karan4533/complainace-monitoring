@@ -5,6 +5,8 @@ import PageHeader from '../components/common/PageHeader';
 import CameraTable from '../components/cameras/CameraTable';
 import CameraDetailDrawer from '../components/cameras/CameraDetailDrawer';
 import { addCamera, fetchCameras, removeCamera } from '../services/cameraService';
+import { fetchStreams } from '../services/streamService';
+import { DEFAULT_STREAMS } from '../config/constants';
 import { getPipelineStatus, getStreamConfig } from '../services/pipelineService';
 
 export default function CamerasPage() {
@@ -16,11 +18,28 @@ export default function CamerasPage() {
   const loadCameras = async () => {
     try {
       const data = await fetchCameras();
-      setCameras(data);
+      if (Array.isArray(data) && data.length) {
+        setCameras(data);
+        return;
+      }
+      const streams = await fetchStreams();
+      setCameras(
+        streams.map((s) => ({
+          id: s.id,
+          name: s.name,
+          rtsp_url: 'rtsp://placeholder/stream',
+          status: 'online',
+        }))
+      );
     } catch {
-      setCameras([
-        { id: 1, name: 'Camera 1', rtsp_url: 'rtsp://placeholder/stream', status: 'online' },
-      ]);
+      setCameras(
+        DEFAULT_STREAMS.map((s) => ({
+          id: s.id,
+          name: s.name,
+          rtsp_url: 'rtsp://placeholder/stream',
+          status: 'online',
+        }))
+      );
     } finally {
       setLoading(false);
     }

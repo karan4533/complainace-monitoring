@@ -13,6 +13,8 @@ import {
   stopPipeline,
 } from '../services/pipelineService';
 import { fetchCameras } from '../services/cameraService';
+import { fetchStreams } from '../services/streamService';
+import { DEFAULT_STREAMS } from '../config/constants';
 import { useViolations } from '../hooks/useViolations';
 import { API_BASE } from '../config/api';
 import { palette } from '../theme/theme';
@@ -45,9 +47,16 @@ export default function DashboardPage() {
     (async () => {
       try {
         const data = await fetchCameras();
-        setCameras(data);
+        if (Array.isArray(data) && data.length) {
+          setCameras(data);
+          return;
+        }
+        const streams = await fetchStreams();
+        setCameras(streams.map((s) => ({ id: s.id, name: s.name, status: 'online' })));
       } catch {
-        setCameras([]);
+        setCameras(
+          DEFAULT_STREAMS.map((s) => ({ id: s.id, name: s.name, status: 'online' }))
+        );
       } finally {
         setCamerasLoading(false);
       }

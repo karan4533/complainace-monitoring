@@ -103,7 +103,7 @@ export default function CameraDetailDrawer({ camera, streamUrl, open, onClose, o
             }}
           >
             <Typography sx={{ fontSize: '0.8125rem', color: palette.warning, lineHeight: 1.6 }}>
-              Camera processing starts immediately after save. Configure detection rules from the button below.
+              Camera processing starts after the stream is added. Assign what this camera should detect under SOP Workflows.
             </Typography>
           </Box>
         </Box>
@@ -115,11 +115,11 @@ export default function CameraDetailDrawer({ camera, streamUrl, open, onClose, o
             startIcon={<SettingsOutlinedIcon />}
             onClick={() => {
               onClose();
-              navigateTo('detection-config', { cameraId: camera.id });
+              navigateTo('sop-workflows');
             }}
             sx={{ height: 44 }}
           >
-            Detection Config
+            SOP Workflow
           </Button>
           <Button
             fullWidth

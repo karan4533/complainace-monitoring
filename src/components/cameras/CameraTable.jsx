@@ -19,10 +19,8 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import StatusBadge from '../common/StatusBadge';
-import { navigateTo } from '../../config/routes';
 import { palette } from '../../theme/theme';
 
 const statusVariant = {
@@ -117,13 +115,6 @@ export default function CameraTable({ cameras, onAdd, onRemove, onSelect, loadin
                   />
                 </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
-                  <IconButton
-                    size="small"
-                    onClick={() => navigateTo('detection-config', { cameraId: camera.id })}
-                    title="Detection config"
-                  >
-                    <SettingsOutlinedIcon fontSize="small" />
-                  </IconButton>
                   <IconButton
                     size="small"
                     color="error"

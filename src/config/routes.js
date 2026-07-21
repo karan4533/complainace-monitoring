@@ -4,8 +4,8 @@ export const ROUTES = {
   ADD_STREAM: '/add-stream',
   INPUT_CONFIG: '/input-config',
   REPORTS: '/reports',
+  SOP_REPORTS: '/sop-reports',
   SETTINGS: '/settings',
-  DETECTION_CONFIG: '/detection-config',
 };
 
 export function parseHashRoute() {
@@ -21,12 +21,13 @@ export function parseHashRoute() {
   if (
     segments[0] === 'input-config' ||
     segments[0] === 'detection-inputs' ||
-    segments[0] === 'detection'
+    segments[0] === 'detection' ||
+    segments[0] === 'sop-workflows'
   ) {
     return { page: 'input-config', params };
   }
   if (segments[0] === 'detection-config') {
-    return { page: 'detection-config', params: { ...params, cameraId: segments[1] || params.cameraId } };
+    return { page: 'input-config', params };
   }
   if (segments[0] === 'reports' || segments[0] === 'violations') {
     return {
@@ -34,6 +35,7 @@ export function parseHashRoute() {
       params: { ...params, id: segments[1] },
     };
   }
+  if (segments[0] === 'sop-reports') return { page: 'sop-reports', params };
   if (segments[0] === 'settings') return { page: 'settings', params };
   return { page: 'dashboard', params };
 }
@@ -48,8 +50,9 @@ export function navigateTo(page, options = {}) {
     dashboard: '#/dashboard',
     'add-stream': '#/add-stream',
     'input-config': '#/input-config',
-    'detection-config': cameraId ? `#/detection-config/${cameraId}${suffix}` : `#/detection-config${suffix}`,
+    'sop-workflows': '#/sop-workflows',
     reports: '#/reports',
+    'sop-reports': '#/sop-reports',
     violations: '#/reports',
     settings: '#/settings',
     'violation-detail': `#/reports/${id}${suffix}`,

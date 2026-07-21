@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
+  Collapse,
   Drawer,
   IconButton,
   List,
@@ -15,10 +16,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useAuth } from '../../context/AuthContext';
 import { navigateTo } from '../../config/routes';
 import { palette } from '../../theme/theme';
@@ -26,16 +28,71 @@ import HeuristicLogo from '../common/HeuristicLogo';
 
 const DRAWER_WIDTH = 260;
 
-const navItems = [
+const mainNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon, page: 'dashboard' },
   { id: 'add-stream', label: 'Add Stream', icon: AddBoxOutlinedIcon, page: 'add-stream' },
-  { id: 'input-config', label: 'Input Config', icon: TuneOutlinedIcon, page: 'input-config' },
-  { id: 'reports', label: 'Reports', icon: AssessmentOutlinedIcon, page: 'reports' },
-  { id: 'settings', label: 'Settings', icon: SettingsOutlinedIcon, page: 'settings' },
+  { id: 'input-config', label: 'SOP Workflows', icon: TuneOutlinedIcon, page: 'input-config' },
 ];
+
+const reportNavItems = [
+  { id: 'reports', label: 'PPE Violations', icon: AssessmentOutlinedIcon, page: 'reports' },
+  { id: 'sop-reports', label: 'SOP Compliance', icon: FactCheckOutlinedIcon, page: 'sop-reports' },
+];
+
+const REPORT_PAGES = new Set(['reports', 'sop-reports', 'violation-detail']);
+
+function isReportPageActive(activePage, itemId) {
+  if (itemId === 'reports') {
+    return activePage === 'reports' || activePage === 'violation-detail';
+  }
+  if (itemId === 'sop-reports') {
+    return activePage === 'sop-reports';
+  }
+  return false;
+}
+
+function NavItem({ item, active, onClick, nested = false }) {
+  const Icon = item.icon;
+  return (
+    <ListItemButton
+      onClick={onClick}
+      sx={{
+        borderRadius: '10px',
+        mb: 0.5,
+        py: nested ? 1 : 1.25,
+        pl: nested ? 4.5 : 2,
+        backgroundColor: active ? palette.sidebarActive : 'transparent',
+        '&:hover': { backgroundColor: active ? palette.sidebarActive : palette.sidebarHover },
+      }}
+    >
+      <ListItemIcon
+        sx={{
+          minWidth: nested ? 32 : 36,
+          color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+        }}
+      >
+        <Icon sx={{ fontSize: nested ? 18 : 20 }} />
+      </ListItemIcon>
+      <ListItemText
+        primary={item.label}
+        primaryTypographyProps={{
+          fontSize: nested ? '0.8125rem' : '0.875rem',
+          fontWeight: active ? 600 : 500,
+          color: active ? '#fff' : 'rgba(255,255,255,0.75)',
+        }}
+      />
+    </ListItemButton>
+  );
+}
 
 function SidebarContent({ activePage, onClose }) {
   const { user, logout } = useAuth();
+  const reportsActive = REPORT_PAGES.has(activePage);
+  const [reportsOpen, setReportsOpen] = useState(reportsActive);
+
+  useEffect(() => {
+    if (reportsActive) setReportsOpen(true);
+  }, [reportsActive]);
 
   const handleNav = (page) => {
     navigateTo(page);
@@ -46,13 +103,6 @@ function SidebarContent({ activePage, onClose }) {
     await logout();
     navigateTo('login');
     onClose?.();
-  };
-
-  const isActive = (item) => {
-    if (item.id === 'reports') {
-      return activePage === 'reports' || activePage === 'violation-detail';
-    }
-    return activePage === item.id;
   };
 
   return (
@@ -88,40 +138,69 @@ function SidebarContent({ activePage, onClose }) {
         </Box>
       </Box>
 
-      <Box sx={{ px: 2, flex: 1 }}>
+      <Box sx={{ px: 2, flex: 1, overflowY: 'auto' }}>
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', px: 1, mb: 1, display: 'block' }}>
           Monitoring
         </Typography>
-        <List disablePadding>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item);
-            return (
-              <ListItemButton
-                key={item.id}
-                onClick={() => handleNav(item.page)}
-                sx={{
-                  borderRadius: '10px',
-                  mb: 0.5,
-                  py: 1.25,
-                  backgroundColor: active ? palette.sidebarActive : 'transparent',
-                  '&:hover': { backgroundColor: active ? palette.sidebarActive : palette.sidebarHover },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 36, color: active ? '#fff' : 'rgba(255,255,255,0.65)' }}>
-                  <Icon sx={{ fontSize: 20 }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{
-                    fontSize: '0.875rem',
-                    fontWeight: active ? 600 : 500,
-                    color: active ? '#fff' : 'rgba(255,255,255,0.75)',
-                  }}
+        <List disablePadding sx={{ mb: 2 }}>
+          {mainNavItems.map((item) => (
+            <NavItem
+              key={item.id}
+              item={item}
+              active={activePage === item.id}
+              onClick={() => handleNav(item.page)}
+            />
+          ))}
+        </List>
+
+        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', px: 1, mb: 1, display: 'block' }}>
+          Reports
+        </Typography>
+        <List disablePadding sx={{ mb: 2 }}>
+          <ListItemButton
+            onClick={() => setReportsOpen((open) => !open)}
+            sx={{
+              borderRadius: '10px',
+              mb: 0.5,
+              py: 1.25,
+              backgroundColor: reportsActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+              '&:hover': { backgroundColor: palette.sidebarHover },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36, color: reportsActive ? '#fff' : 'rgba(255,255,255,0.65)' }}>
+              <AssessmentOutlinedIcon sx={{ fontSize: 20 }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="All Reports"
+              primaryTypographyProps={{
+                fontSize: '0.875rem',
+                fontWeight: reportsActive ? 600 : 500,
+                color: reportsActive ? '#fff' : 'rgba(255,255,255,0.75)',
+              }}
+            />
+            <ExpandMoreIcon
+              sx={{
+                fontSize: 20,
+                color: 'rgba(255,255,255,0.5)',
+                transform: reportsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s',
+              }}
+            />
+          </ListItemButton>
+
+          <Collapse in={reportsOpen} timeout="auto" unmountOnExit>
+            <List disablePadding>
+              {reportNavItems.map((item) => (
+                <NavItem
+                  key={item.id}
+                  item={item}
+                  nested
+                  active={isReportPageActive(activePage, item.id)}
+                  onClick={() => handleNav(item.page)}
                 />
-              </ListItemButton>
-            );
-          })}
+              ))}
+            </List>
+          </Collapse>
         </List>
       </Box>
 
