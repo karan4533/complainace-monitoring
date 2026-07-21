@@ -1,10 +1,13 @@
-// In production: set VITE_API_BASE in .env (e.g. http://192.168.1.10:8000)
-// In dev:        falls back to same hostname:8000 so it works on any machine
-const envBase = import.meta.env.VITE_API_BASE;
+// Set VITE_API_BASE in .env when backend is on another host (e.g. GCP VM).
+// In dev without VITE_API_BASE, requests use same-origin paths so Vite proxy
+// forwards /api and /ws to http://localhost:8000 (see vite.config.js).
+const envBase = import.meta.env.VITE_API_BASE?.replace(/\/$/, '');
 
-const _base = envBase
-  ? envBase.replace(/\/$/, '')
-  : `http://${window.location.hostname}:8000`;
+export const API_BASE = envBase ?? (import.meta.env.DEV ? '' : `http://${window.location.hostname}:8000`);
 
-export const API_BASE = _base;
-export const WS_BASE = _base.replace(/^http/, 'ws');
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+export const WS_BASE = envBase
+  ? envBase.replace(/^http/, 'ws')
+  : import.meta.env.DEV
+    ? `${wsProtocol}//${window.location.host}`
+    : `ws://${window.location.hostname}:8000`;

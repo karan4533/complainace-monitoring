@@ -1,4 +1,4 @@
-import api from '../api';
+import { workflowApi } from '../api/workflowApi';
 
-export const fetchSopEvents = api.sop.getEvents;
-export const fetchSopPersonIds = api.sop.getPersonIds;
+export const fetchSopEvents = workflowApi.getEvents;
+export const fetchSopPersonIds = workflowApi.getPersonIds;

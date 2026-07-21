@@ -1,5 +1,5 @@
-import api from '../api';
+import { workflowApi } from '../api/workflowApi';
 
-export const fetchSopConfigs = api.sop.getConfigs;
-export const saveStreamSopConfig = api.sop.saveConfig;
-export const deleteStreamSopConfig = api.sop.deleteConfig;
+export const fetchSopConfigs = workflowApi.getConfigs;
+export const saveStreamSopConfig = workflowApi.saveConfig;
+export const deleteStreamSopConfig = workflowApi.deleteConfig;

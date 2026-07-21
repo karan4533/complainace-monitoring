@@ -1,6 +1,6 @@
-import api from '../api';
+import { detectionApi } from '../api/detectionApi';
 
-export const startPipeline = api.pipeline.start;
-export const stopPipeline = api.pipeline.stop;
-export const getPipelineStatus = api.pipeline.getStatus;
-export const getStreamConfig = api.pipeline.getStreamConfig;
+export const startPipeline = detectionApi.startPipeline;
+export const stopPipeline = detectionApi.stopPipeline;
+export const getPipelineStatus = detectionApi.getPipelineStatus;
+export const getStreamConfig = detectionApi.getStreamConfig;

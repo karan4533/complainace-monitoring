@@ -31,6 +31,8 @@ export const API_ENDPOINTS = {
   cameras: {
     list: '/api/cameras',
     byId: (cameraId) => `/api/cameras/${cameraId}`,
+    submitStream: '/api/cameras/stream-url',
+    feeds: '/api/cameras/feeds',
   },
 
   // PPE violation reports

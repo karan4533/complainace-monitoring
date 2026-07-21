@@ -151,4 +151,7 @@ const api = {
 
 export { API_ENDPOINTS } from './endpoints';
 export { apiFetch, apiBlob } from './client';
+export * as cameraApi from './cameraApi';
+export { workflowApi } from './workflowApi';
+export { detectionApi } from './detectionApi';
 export default api;

@@ -1,10 +1,10 @@
-import api from '../api';
+import { detectionApi } from '../api/detectionApi';
 import { MOCK_REPORT_ENTRIES, createMockPdfBlob } from '../data/mockReports';
 import { filterReportEntries } from '../utils/reportUtils';
 
 export async function fetchReports(limit = 100) {
   try {
-    return await api.reports.list(limit);
+    return await detectionApi.listReports(limit);
   } catch {
     return MOCK_REPORT_ENTRIES.slice(0, limit);
   }
@@ -20,7 +20,7 @@ export async function downloadPdfReport({
   signal,
 }) {
   try {
-    return await api.reports.downloadPdf({
+    return await detectionApi.downloadReportPdf({
       startDate,
       endDate,
       startTime,

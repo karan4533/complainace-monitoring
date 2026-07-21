@@ -1,5 +1,13 @@
-import api from '../api';
+import {
+  createCamera,
+  fetchCameraFeeds,
+  listCameras,
+  removeCamera as removeCameraApi,
+  submitStreamUrl,
+} from '../api/cameraApi';
 
-export const fetchCameras = api.cameras.list;
-export const addCamera = api.cameras.create;
-export const removeCamera = api.cameras.remove;
+export const fetchCameras = listCameras;
+export const addCamera = createCamera;
+export const removeCamera = removeCameraApi;
+export const submitCameraStreamUrl = submitStreamUrl;
+export { fetchCameraFeeds };

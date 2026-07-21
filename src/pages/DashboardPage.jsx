@@ -1,33 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Box, Button, CircularProgress, MenuItem, TextField, Typography } from '@mui/material';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
-import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import AppLayout from '../components/layout/AppLayout';
 import PageHeader from '../components/common/PageHeader';
 import StatusBadge from '../components/common/StatusBadge';
 import LiveCameraTable from '../components/live/LiveCameraTable';
-import {
-  getPipelineStatus,
-  getStreamConfig,
-  startPipeline,
-  stopPipeline,
-} from '../services/pipelineService';
+import { getPipelineStatus, getStreamConfig, startPipeline, stopPipeline } from '../services/pipelineService';
 import { fetchCameras } from '../services/cameraService';
 import { fetchStreams } from '../services/streamService';
 import { DEFAULT_STREAMS } from '../config/constants';
 import { useViolations } from '../hooks/useViolations';
-import { API_BASE } from '../config/api';
 import { palette } from '../theme/theme';
 
-function resolveCameraStreamUrl(camera, baseStreamUrl, localVideoUrl) {
+function resolveCameraStreamUrl(camera, baseStreamUrl) {
   if (camera.stream_url) return camera.stream_url;
   if (camera.streamUrl) return camera.streamUrl;
   if (baseStreamUrl && camera.stream_src) {
     const playerBase = baseStreamUrl.split('?')[0];
     return `${playerBase}?src=${camera.stream_src}`;
   }
-  if (localVideoUrl) return localVideoUrl;
   return baseStreamUrl;
 }
 
@@ -39,15 +31,12 @@ export default function DashboardPage() {
   const [pipelineStatus, setPipelineStatus] = useState('');
   const [camerasLoading, setCamerasLoading] = useState(true);
   const [stopping, setStopping] = useState(false);
-  const [localVideoUrl, setLocalVideoUrl] = useState('');
-  const [localVideoName, setLocalVideoName] = useState('');
-  const [localVideoCameraId, setLocalVideoCameraId] = useState('');
   const pollRef = useRef(null);
-  const videoInputRef = useRef(null);
   const { violations } = useViolations({ enabled: true });
 
-  const activeCameraIds = new Set(
-    violations.filter((v) => !v.acknowledged).map((v) => v.cameraId)
+  const activeCameraIds = useMemo(
+    () => new Set(violations.filter((v) => !v.acknowledged).map((v) => Number(v.cameraId))),
+    [violations]
   );
 
   useEffect(() => {
@@ -61,20 +50,12 @@ export default function DashboardPage() {
         const streams = await fetchStreams();
         setCameras(streams.map((s) => ({ id: s.id, name: s.name, status: 'online' })));
       } catch {
-        setCameras(
-          DEFAULT_STREAMS.map((s) => ({ id: s.id, name: s.name, status: 'online' }))
-        );
+        setCameras(DEFAULT_STREAMS.map((s) => ({ id: s.id, name: s.name, status: 'online' })));
       } finally {
         setCamerasLoading(false);
       }
     })();
   }, []);
-
-  useEffect(() => {
-    if (!localVideoCameraId && cameras.length) {
-      setLocalVideoCameraId(String(cameras[0].id));
-    }
-  }, [cameras, localVideoCameraId]);
 
   useEffect(() => {
     (async () => {
@@ -122,28 +103,9 @@ export default function DashboardPage() {
     poll();
   };
 
-  useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current); }, []);
-  useEffect(
-    () => () => {
-      if (localVideoUrl?.startsWith('blob:')) URL.revokeObjectURL(localVideoUrl);
-    },
-    [localVideoUrl]
-  );
-
-  const handlePickVideo = () => {
-    videoInputRef.current?.click();
-  };
-
-  const handleVideoSelected = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!localVideoCameraId) return;
-    if (localVideoUrl?.startsWith('blob:')) URL.revokeObjectURL(localVideoUrl);
-    setLocalVideoUrl(URL.createObjectURL(file));
-    setLocalVideoName(file.name);
-    setPipelineStatus(`Using local video for Camera ${localVideoCameraId}: ${file.name}`);
-    event.target.value = '';
-  };
+  useEffect(() => () => {
+    if (pollRef.current) clearTimeout(pollRef.current);
+  }, []);
 
   const handleStartStream = async () => {
     try {
@@ -156,9 +118,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error(error);
       setPipelineStarted(false);
-      setPipelineStatus(
-        `Could not reach backend at ${API_BASE}. Make sure FastAPI is running and port 8000 is open in GCP firewall.`
-      );
+      setPipelineStatus('Failed to start pipeline.');
       setLoading(false);
     }
   };
@@ -186,34 +146,9 @@ export default function DashboardPage() {
     <AppLayout activePage="dashboard" pipelineLive={pipelineLive}>
       <PageHeader
         title="Live Monitoring Dashboard"
-        subtitle="Camera live feeds in a table · rows highlight red on active violation"
+        subtitle="Live camera feeds in a table · rows highlight red on active violation"
         action={
-          <Box sx={{ display: 'flex', gap: 1.25, width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
-            <TextField
-              select
-              size="small"
-              value={localVideoCameraId}
-              onChange={(e) => setLocalVideoCameraId(e.target.value)}
-              sx={{
-                minWidth: 140,
-                '& .MuiOutlinedInput-root': { height: 42, backgroundColor: '#fff' },
-              }}
-            >
-              {cameras.map((camera) => (
-                <MenuItem key={camera.id} value={String(camera.id)}>
-                  {camera.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button
-              variant="text"
-              onClick={handlePickVideo}
-              disabled={!localVideoCameraId}
-              startIcon={<UploadFileOutlinedIcon />}
-              sx={{ height: 42, px: 2, flex: { xs: 1, sm: 'none' } }}
-            >
-              {localVideoName ? 'Change Video' : 'Insert Video'}
-            </Button>
+          <Box sx={{ display: 'flex', width: { xs: '100%', sm: 'auto' } }}>
             {pipelineStarted ? (
               <Button
                 variant="outlined"
@@ -243,13 +178,6 @@ export default function DashboardPage() {
                 {loading ? 'Starting...' : 'Start Stream'}
               </Button>
             )}
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/*"
-              onChange={handleVideoSelected}
-              style={{ display: 'none' }}
-            />
           </Box>
         }
       />
@@ -288,11 +216,7 @@ export default function DashboardPage() {
       ) : (
         <LiveCameraTable
           cameras={cameras}
-          resolveStreamUrl={(camera) =>
-            camera.id === Number(localVideoCameraId)
-              ? resolveCameraStreamUrl(camera, streamUrl, localVideoUrl)
-              : resolveCameraStreamUrl(camera, streamUrl, '')
-          }
+          resolveStreamUrl={(camera) => resolveCameraStreamUrl(camera, streamUrl)}
           activeCameraIds={activeCameraIds}
           pipelineLive={pipelineLive}
         />
