@@ -36,6 +36,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [pipelineStatus, setPipelineStatus] = useState('');
   const [camerasLoading, setCamerasLoading] = useState(true);
+  const [stopping, setStopping] = useState(false);
   const pollRef = useRef(null);
   const { violations } = useViolations({ enabled: true });
 
@@ -59,6 +60,22 @@ export default function DashboardPage() {
         );
       } finally {
         setCamerasLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const status = await getPipelineStatus();
+        if (status.deepstream_running && status.go2rtc_running) {
+          const streamData = await getStreamConfig();
+          setStreamUrl(streamData.streamUrl);
+          setPipelineStarted(true);
+          setPipelineStatus('Pipeline running. Stream live.');
+        }
+      } catch {
+        /* pipeline not running */
       }
     })();
   }, []);
@@ -105,6 +122,7 @@ export default function DashboardPage() {
       waitForPipelineReady();
     } catch (error) {
       console.error(error);
+      setPipelineStarted(false);
       setPipelineStatus(
         `Could not reach backend at ${API_BASE}. Make sure FastAPI is running and port 8000 is open in GCP firewall.`
       );
@@ -114,13 +132,18 @@ export default function DashboardPage() {
 
   const handleStopStream = async () => {
     try {
+      setStopping(true);
+      if (pollRef.current) clearTimeout(pollRef.current);
       await stopPipeline();
       setStreamUrl(null);
       setPipelineStarted(false);
+      setLoading(false);
       setPipelineStatus('Pipeline stopped.');
     } catch (error) {
       console.error(error);
       setPipelineStatus('Failed to stop pipeline.');
+    } finally {
+      setStopping(false);
     }
   };
 
@@ -132,21 +155,13 @@ export default function DashboardPage() {
         title="Live Monitoring Dashboard"
         subtitle="Camera live feeds in a table · rows highlight red on active violation"
         action={
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
-            <Button
-              variant="contained"
-              onClick={handleStartStream}
-              disabled={loading || (pipelineStarted && !!streamUrl)}
-              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <PlayCircleFilledIcon />}
-              sx={{ height: 42, px: 2.5, flex: { xs: 1, sm: 'none' } }}
-            >
-              {loading ? 'Starting...' : 'Start Stream'}
-            </Button>
-            {pipelineStarted && (
+          <Box sx={{ display: 'flex', width: { xs: '100%', sm: 'auto' } }}>
+            {pipelineStarted ? (
               <Button
                 variant="outlined"
                 onClick={handleStopStream}
-                startIcon={<StopCircleOutlinedIcon />}
+                disabled={stopping}
+                startIcon={stopping ? <CircularProgress size={18} color="inherit" /> : <StopCircleOutlinedIcon />}
                 sx={{
                   height: 42,
                   px: 2.5,
@@ -157,7 +172,17 @@ export default function DashboardPage() {
                   '&:hover': { borderColor: palette.error, backgroundColor: '#FDDEDE' },
                 }}
               >
-                Stop Stream
+                {stopping ? 'Stopping...' : 'Stop Stream'}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleStartStream}
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <PlayCircleFilledIcon />}
+                sx={{ height: 42, px: 2.5, flex: { xs: 1, sm: 'none' } }}
+              >
+                {loading ? 'Starting...' : 'Start Stream'}
               </Button>
             )}
           </Box>
