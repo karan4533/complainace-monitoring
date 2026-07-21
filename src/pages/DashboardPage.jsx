@@ -5,7 +5,7 @@ import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import AppLayout from '../components/layout/AppLayout';
 import PageHeader from '../components/common/PageHeader';
 import StatusBadge from '../components/common/StatusBadge';
-import CameraTile from '../components/live/CameraTile';
+import LiveCameraTable from '../components/live/LiveCameraTable';
 import {
   getPipelineStatus,
   getStreamConfig,
@@ -130,7 +130,7 @@ export default function DashboardPage() {
     <AppLayout activePage="dashboard" pipelineLive={pipelineLive}>
       <PageHeader
         title="Live Monitoring Dashboard"
-        subtitle="Multiple camera live feeds · tiles turn red on active violation"
+        subtitle="Camera live feeds in a table · rows highlight red on active violation"
         action={
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, width: { xs: '100%', sm: 'auto' } }}>
             <Button
@@ -192,30 +192,16 @@ export default function DashboardPage() {
             No cameras connected yet
           </Typography>
           <Typography color="text.secondary">
-            Once the backend connects cameras, all live feeds will appear here in a multi-camera grid.
+            Once the backend connects cameras, all live feeds will appear here in the monitoring table.
           </Typography>
         </Box>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              lg: 'repeat(3, 1fr)',
-            },
-            gap: 2,
-          }}
-        >
-          {cameras.map((camera) => (
-            <CameraTile
-              key={camera.id}
-              camera={camera}
-              streamUrl={resolveCameraStreamUrl(camera, streamUrl)}
-              violationActive={activeCameraIds.has(camera.id)}
-            />
-          ))}
-        </Box>
+        <LiveCameraTable
+          cameras={cameras}
+          resolveStreamUrl={(camera) => resolveCameraStreamUrl(camera, streamUrl)}
+          activeCameraIds={activeCameraIds}
+          pipelineLive={pipelineLive}
+        />
       )}
     </AppLayout>
   );

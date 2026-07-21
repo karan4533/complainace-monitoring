@@ -10,8 +10,7 @@ import DetectionInputsPage from './pages/DetectionInputsPage';
 import ViolationsPage from './pages/ViolationsPage';
 import ViolationDetailPage from './pages/ViolationDetailPage';
 import SopReportsPage from './pages/SopReportsPage';
-
-
+import SettingsPage from './pages/SettingsPage';
 export default function App() {
   const { isAuthenticated, loading } = useAuth();
   const route = useHashRoute();
