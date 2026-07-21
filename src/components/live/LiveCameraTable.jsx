@@ -13,7 +13,13 @@ import {
 import StatusBadge from '../common/StatusBadge';
 import { palette } from '../../theme/theme';
 
+function isVideoFileUrl(url) {
+  if (!url) return false;
+  return url.startsWith('blob:') || /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url);
+}
+
 function StreamPreview({ streamUrl, cameraName }) {
+  const showVideoTag = isVideoFileUrl(streamUrl);
   return (
     <Box
       sx={{
@@ -26,11 +32,24 @@ function StreamPreview({ streamUrl, cameraName }) {
       }}
     >
       {streamUrl ? (
-        <iframe
-          src={streamUrl}
-          title={cameraName}
-          style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-        />
+        showVideoTag ? (
+          <video
+            src={streamUrl}
+            title={cameraName}
+            controls
+            muted
+            autoPlay
+            loop
+            playsInline
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <iframe
+            src={streamUrl}
+            title={cameraName}
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+          />
+        )
       ) : (
         <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 1 }}>
           <Typography sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.6875rem', textAlign: 'center' }}>
@@ -65,7 +84,7 @@ export default function LiveCameraTable({ cameras, resolveStreamUrl, activeCamer
           {cameras.map((camera) => {
             const violationActive = activeCameraIds.has(camera.id);
             const streamUrl = resolveStreamUrl(camera);
-            const streamOnline = pipelineLive && !!streamUrl;
+            const streamOnline = !!streamUrl && (pipelineLive || isVideoFileUrl(streamUrl));
 
             return (
               <TableRow
