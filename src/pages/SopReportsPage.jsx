@@ -21,7 +21,7 @@ export default function SopReportsPage() {
   const [onlyAlerts, setOnlyAlerts] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const { events, loading, reload } = useSopEvents({
+  const { events, loading, error, reload } = useSopEvents({
     streamId: streamId || undefined,
     objectId: objectId || undefined,
     onlyAlerts,
@@ -82,7 +82,13 @@ export default function SopReportsPage() {
         onOnlyAlertsChange={setOnlyAlerts}
       />
 
-      {!events.length && !loading && (
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {!events.length && !loading && !error && (
         <Alert severity="info" sx={{ mb: 2 }}>
           No SOP events yet. Configure workflows under SOP Workflows, start the pipeline on the Dashboard, and
           events will appear here as people are tracked on each camera.

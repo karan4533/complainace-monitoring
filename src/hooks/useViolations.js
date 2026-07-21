@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { WS_BASE } from '../config/api';
 import { fetchViolations } from '../services/violationService';
 import { normalizeViolation } from '../utils/violationUtils';
+import { isPpeViolationMessage } from '../utils/wsMessageUtils';
 
 const MAX_ROWS = 200;
 
@@ -48,9 +49,10 @@ export function useViolations({ enabled = true } = {}) {
     const hydrate = async () => {
       try {
         const data = await fetchViolations({ limit: MAX_ROWS });
-        setViolations(data.map(normalizeViolation));
+        setViolations(Array.isArray(data) ? data.map(normalizeViolation) : []);
       } catch (err) {
         console.error('Failed to load violations:', err);
+        setViolations([]);
       } finally {
         setLoading(false);
       }
@@ -58,7 +60,14 @@ export function useViolations({ enabled = true } = {}) {
 
     const connect = () => {
       socket = new WebSocket(`${WS_BASE}/ws/violations`);
-      socket.onmessage = (event) => buffer.unshift(JSON.parse(event.data));
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (isPpeViolationMessage(payload)) buffer.unshift(payload);
+        } catch {
+          /* ignore non-json */
+        }
+      };
       socket.onclose = () => { reconnectTimer = setTimeout(connect, 2000); };
       socket.onerror = () => socket.close();
     };

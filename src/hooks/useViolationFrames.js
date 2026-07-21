@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { WS_BASE } from '../config/api';
 import { fetchViolations } from '../services/violationService';
 import { mergeFlatEntriesIntoGroups } from '../utils/reportUtils';
-import { MOCK_REPORT_ENTRIES } from '../data/mockReports';
+import { isPpeViolationMessage } from '../utils/wsMessageUtils';
 
 const MAX_FRAMES = 100;
 
 export function useViolationFrames({ enabled = true } = {}) {
   const [frames, setFrames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const mergeFrames = useCallback((flatEntries, existing = []) => {
     return mergeFlatEntriesIntoGroups(flatEntries, existing).slice(0, MAX_FRAMES);
@@ -23,16 +24,14 @@ export function useViolationFrames({ enabled = true } = {}) {
     let buffer = [];
 
     const hydrate = async () => {
+      setError('');
       try {
         const data = await fetchViolations({ limit: MAX_FRAMES });
-        if (!data?.length) {
-          setFrames(mergeFrames([...MOCK_REPORT_ENTRIES].reverse(), []));
-        } else {
-          setFrames(mergeFrames(data.reverse(), []));
-        }
+        setFrames(Array.isArray(data) && data.length ? mergeFrames(data.reverse(), []) : []);
       } catch (err) {
-        console.error('Failed to load violation frames, using mock data:', err);
-        setFrames(mergeFrames([...MOCK_REPORT_ENTRIES].reverse(), []));
+        console.error('Failed to load violation frames:', err);
+        setFrames([]);
+        setError(err.message || 'Failed to load violation reports.');
       } finally {
         setLoading(false);
       }
@@ -40,8 +39,17 @@ export function useViolationFrames({ enabled = true } = {}) {
 
     const connect = () => {
       socket = new WebSocket(`${WS_BASE}/ws/violations`);
-      socket.onmessage = (event) => buffer.unshift(JSON.parse(event.data));
-      socket.onclose = () => { reconnectTimer = setTimeout(connect, 2000); };
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (isPpeViolationMessage(payload)) buffer.unshift(payload);
+        } catch {
+          /* ignore non-json */
+        }
+      };
+      socket.onclose = () => {
+        reconnectTimer = setTimeout(connect, 2000);
+      };
       socket.onerror = () => socket.close();
     };
 
@@ -65,5 +73,5 @@ export function useViolationFrames({ enabled = true } = {}) {
     };
   }, [enabled, mergeFrames]);
 
-  return { frames, loading };
+  return { frames, loading, error };
 }

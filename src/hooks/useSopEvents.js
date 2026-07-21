@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { WS_BASE } from '../config/api';
-import { MOCK_SOP_EVENTS } from '../data/mockSopEvents';
 import { fetchSopEvents } from '../services/sopEventService';
 import { mergeSopEvent } from '../utils/sopEventUtils';
 
@@ -11,26 +10,20 @@ export function useSopEvents(filters = {}, { enabled = true } = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const apiFilters = {
-    streamId: filters.streamId || undefined,
-    objectId: filters.objectId || undefined,
-    onlyAlerts: filters.onlyAlerts || undefined,
-    limit: MAX_EVENTS,
-  };
-
   const load = useCallback(async () => {
     setError('');
     try {
-      const data = await fetchSopEvents(apiFilters);
-      if (Array.isArray(data) && data.length) {
-        setEvents(data.slice(0, MAX_EVENTS));
-      } else {
-        setEvents(MOCK_SOP_EVENTS);
-      }
+      const data = await fetchSopEvents({
+        streamId: filters.streamId || undefined,
+        objectId: filters.objectId || undefined,
+        onlyAlerts: filters.onlyAlerts || undefined,
+        limit: MAX_EVENTS,
+      });
+      setEvents(Array.isArray(data) ? data.slice(0, MAX_EVENTS) : []);
     } catch (err) {
-      console.error('Failed to load SOP events, using mock data:', err);
-      setEvents(MOCK_SOP_EVENTS);
-      setError('');
+      console.error('Failed to load SOP events:', err);
+      setEvents([]);
+      setError(err.message || 'Failed to load SOP events.');
     } finally {
       setLoading(false);
     }

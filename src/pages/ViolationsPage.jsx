@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, CircularProgress, MenuItem, TextField, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, MenuItem, TextField, Typography } from '@mui/material';
 import AppLayout from '../components/layout/AppLayout';
 import PageHeader from '../components/common/PageHeader';
 import ReportToolbar from '../components/reports/ReportToolbar';
@@ -15,7 +15,7 @@ import { palette } from '../theme/theme';
 const defaultRange = getDefaultReportDateRange();
 
 export default function ViolationsPage() {
-  const { frames, loading } = useViolationFrames();
+  const { frames, loading, error } = useViolationFrames();
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [startDate, setStartDate] = useState(defaultRange.startDate);
   const [endDate, setEndDate] = useState(defaultRange.endDate);
@@ -48,10 +48,7 @@ export default function ViolationsPage() {
 
   const imageUrl = (frame) => {
     const filename = frame.image_path?.split('/').pop() || '';
-    if (!filename || filename.startsWith('mock_')) {
-      const label = encodeURIComponent(`Cam ${frame.stream_id}`);
-      return `https://placehold.co/320x200/1a1a1a/ffffff?text=${label}`;
-    }
+    if (!filename) return '';
     return `${API_BASE}/stored_images/${filename}`;
   };
 
@@ -74,8 +71,6 @@ export default function ViolationsPage() {
         endDate: toBackendDate(endDate),
         startTime,
         endTime,
-        isoStartDate: startDate,
-        isoEndDate: endDate,
         signal: controller.signal,
       });
       const blobUrl = window.URL.createObjectURL(blob);
@@ -87,7 +82,7 @@ export default function ViolationsPage() {
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
-      alert(err.message || 'PDF download failed.');
+      alert(err.message || 'PDF download failed. Check backend connectivity.');
     } finally {
       clearTimeout(timeoutId);
       setDownloadingPdf(false);
@@ -100,6 +95,18 @@ export default function ViolationsPage() {
         title="PPE Violation Reports"
         subtitle={`${filteredFrames.length} of ${frames.length} frame${frames.length !== 1 ? 's' : ''} · filtered by date/time`}
       />
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {!loading && !error && !frames.length && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No PPE violations yet. Start the pipeline, then detections will appear here and update live.
+        </Alert>
+      )}
 
       <Box
         sx={{
